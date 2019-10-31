@@ -1,9 +1,4 @@
-#[cfg(target_arch = "x86")]
-use std::arch::x86 as arch;
-#[cfg(target_arch = "x86_64")]
-use std::arch::x86_64 as arch;
-
-use arch::{_rdrand16_step, _rdrand32_step, _rdrand64_step};
+use crate::arch::{_rdrand16_step, _rdrand32_step, _rdrand64_step};
 use std::fmt::{Debug, Display, LowerHex, UpperHex};
 use std::hash::Hash;
 use std::marker::PhantomData;

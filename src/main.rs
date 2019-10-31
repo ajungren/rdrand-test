@@ -1,3 +1,8 @@
+#[cfg(target_arch = "x86")]
+pub(crate) use std::arch::x86 as arch;
+#[cfg(target_arch = "x86_64")]
+pub(crate) use std::arch::x86_64 as arch;
+
 use std::process::exit;
 use std::str::FromStr;
 use std::string::ToString;

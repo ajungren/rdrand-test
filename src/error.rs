@@ -4,6 +4,7 @@ use std::fmt::{self, Display};
 #[derive(Clone, Copy, Debug)]
 pub enum Error {
     InsufficientIterations { required: usize },
+    UnsupportedProcessor,
 }
 
 impl Display for Error {
@@ -21,6 +22,7 @@ impl Display for Error {
                     "iterations are"
                 }
             ),
+            UnsupportedProcessor => write!(f, "current CPU does not support RDRAND"),
         }
     }
 }

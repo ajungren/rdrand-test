@@ -1,8 +1,11 @@
+use crate::arch::{__cpuid, __get_cpuid_max};
 use std::collections::HashSet;
 
 use bitflags::bitflags;
 
 use crate::{Error, RdRand};
+
+const CPUID_RDRAND_BIT: usize = 30;
 
 bitflags! {
     #[derive(Default)]
@@ -19,24 +22,37 @@ pub struct Generator {
 }
 
 impl Generator {
-    #[inline]
-    pub fn new(iterations: usize, options: GeneratorOptions) -> Result<Self, Error> {
-        let min_iterations = if options.contains(GeneratorOptions::SMOKE_TEST) {
-            2
+    pub fn supported() -> bool {
+        let max_leaf = unsafe { __get_cpuid_max(0).0 };
+        if max_leaf >= 1 {
+            let result = unsafe { __cpuid(1) };
+            (result.ecx >> CPUID_RDRAND_BIT) & 1 == 1
         } else {
-            1
-        };
+            false
+        }
+    }
 
-        if iterations >= min_iterations {
-            Ok(Generator {
-                iterations,
-                terminal_width: term_size::dimensions().unwrap_or((0, 0)).0,
-                options,
-            })
+    pub fn new(iterations: usize, options: GeneratorOptions) -> Result<Self, Error> {
+        if Generator::supported() {
+            let min_iterations = if options.contains(GeneratorOptions::SMOKE_TEST) {
+                2
+            } else {
+                1
+            };
+
+            if iterations >= min_iterations {
+                Ok(Generator {
+                    iterations,
+                    terminal_width: term_size::dimensions().unwrap_or((0, 0)).0,
+                    options,
+                })
+            } else {
+                Err(Error::InsufficientIterations {
+                    required: min_iterations,
+                })
+            }
         } else {
-            Err(Error::InsufficientIterations {
-                required: min_iterations,
-            })
+            Err(Error::UnsupportedProcessor)
         }
     }
 
