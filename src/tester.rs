@@ -9,19 +9,19 @@ const CPUID_RDRAND_BIT: usize = 30;
 
 bitflags! {
     #[derive(Default)]
-    pub struct GeneratorOptions: u8 {
+    pub struct TesterOptions: u8 {
         const QUIET = 0b0000_0001;
         const SMOKE_TEST = 0b0000_0010;
     }
 }
 
-pub struct Generator {
+pub struct Tester {
     iterations: usize,
     terminal_width: usize,
-    options: GeneratorOptions,
+    options: TesterOptions,
 }
 
-impl Generator {
+impl Tester {
     pub fn supported() -> bool {
         let max_leaf = unsafe { __get_cpuid_max(0).0 };
         if max_leaf >= 1 {
@@ -32,16 +32,16 @@ impl Generator {
         }
     }
 
-    pub fn new(iterations: usize, options: GeneratorOptions) -> Result<Self, Error> {
-        if Generator::supported() {
-            let min_iterations = if options.contains(GeneratorOptions::SMOKE_TEST) {
+    pub fn new(iterations: usize, options: TesterOptions) -> Result<Self, Error> {
+        if Tester::supported() {
+            let min_iterations = if options.contains(TesterOptions::SMOKE_TEST) {
                 2
             } else {
                 1
             };
 
             if iterations >= min_iterations {
-                Ok(Generator {
+                Ok(Tester {
                     iterations,
                     terminal_width: term_size::dimensions().unwrap_or((0, 0)).0,
                     options,
@@ -58,12 +58,12 @@ impl Generator {
 
     #[inline]
     pub fn is_quiet(&self) -> bool {
-        self.options.contains(GeneratorOptions::QUIET)
+        self.options.contains(TesterOptions::QUIET)
     }
 
     #[inline]
     pub fn is_smoke_test(&self) -> bool {
-        self.options.contains(GeneratorOptions::SMOKE_TEST)
+        self.options.contains(TesterOptions::SMOKE_TEST)
     }
 
     #[inline]
@@ -124,9 +124,7 @@ impl Generator {
 
     fn smoke_test<T: RdRand>(&self) -> bool {
         let mut first_value = None;
-        for _ in 0..self.iterations {
-            let value = T::rdrand();
-
+        for value in T::iter_rdrand().take(self.iterations) {
             if let Some(first_value) = first_value {
                 if first_value != value {
                     print!("OK");

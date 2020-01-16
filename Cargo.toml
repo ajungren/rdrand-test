@@ -6,11 +6,16 @@ description = "Test the RDRAND instruction on x86/x86_64 processors."
 license = "Apache-2.0"
 edition = "2018"
 
-[dependencies]
-bitflags = "1.2"
-clap = { version = "2.33", default-features = false }
-term_size = "0.3"
+[[bin]]
+name = "rdrand-test"
+bench = false
+test = false
 
 [profile.release]
 opt-level = "s"
 lto = true
+
+[dependencies]
+bitflags = "1.2"
+clap = { version = "2.33", default-features = false }
+term_size = "0.3"
